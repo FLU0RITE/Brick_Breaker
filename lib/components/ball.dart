@@ -5,7 +5,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/effects.dart';
 
 import '../presentation/brick_breaker.dart';
-import 'bat.dart';
+
 import 'brick.dart';
 
 class Ball extends CircleComponent
@@ -15,6 +15,7 @@ class Ball extends CircleComponent
     required super.position,
     required double radius,
     required this.difficultyModifier,
+    this.isInitialBall = false,
   }) : super(
          radius: radius,
          anchor: Anchor.center,
@@ -27,6 +28,7 @@ class Ball extends CircleComponent
 
   final Vector2 velocity;
   final double difficultyModifier;
+  final bool isInitialBall; // 새로 추가된 속성
 
   @override
   void update(double dt) {
@@ -48,23 +50,17 @@ class Ball extends CircleComponent
       } else if (intersectionPoints.first.x >= game.width) {
         velocity.x = -velocity.x;
       } else if (intersectionPoints.first.y >= game.height) {
-        add(
-          RemoveEffect(
-            delay: 0.35,
-            onComplete: () {
-              // Modify from here
-              game.playState = PlayState.gameOver;
-            },
-          ),
-        );
+        // 공의 속도를 0으로 설정하여 멈춥니다.
+        velocity.setFrom(Vector2.zero());
+
+        // BrickBreaker에 공 회수를 알립니다.
+        game.onBallReturned(this); // Ball 객체 자체를 전달
+
+        // 이 공이 첫 공이 아니라면 스스로 제거됩니다. (onBallReturned 내부 로직에서 처리)
+        return;
+
       }
-    } else if (other is Bat) {
-      velocity.y = -velocity.y;
-      velocity.x =
-          velocity.x +
-          (position.x - other.position.x) / other.size.x * game.width * 0.3;
-    } else if (other is Brick) {
-      // Modify from here...
+    }else if (other is Brick) {
       if (position.y < other.position.y - other.size.y / 2) {
         velocity.y = -velocity.y;
       } else if (position.y > other.position.y + other.size.y / 2) {
