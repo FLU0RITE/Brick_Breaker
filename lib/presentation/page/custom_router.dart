@@ -1,5 +1,8 @@
+
 import 'package:break_brick/presentation/page/start/start_page.dart';
 import 'package:go_router/go_router.dart';
+
+import 'game/solo/solo_game.dart';
 
 class CustomRouter {
   static GoRouter router = GoRouter(
@@ -8,7 +11,7 @@ class CustomRouter {
       GoRoute(path: '/start', builder: (context, state) => const StartPage()),
       GoRoute(path: '/login', builder: (context, state) => const StartPage()),
       GoRoute(path: '/multi', builder: (context, state) => const StartPage()),
-      GoRoute(path: '/solo', builder: (context, state) => const StartPage()),
+      GoRoute(path: '/solo', builder: (context, state) => const SoloGamePage()),
     ],
   );
 }

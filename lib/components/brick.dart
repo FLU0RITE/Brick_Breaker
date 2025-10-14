@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../config.dart';
 import '../presentation/brick_breaker.dart';
 import 'ball.dart';
-import 'bat.dart';
+
 
 class Brick extends RectangleComponent
     with CollisionCallbacks, HasGameReference<BrickBreaker> {
@@ -31,7 +31,6 @@ class Brick extends RectangleComponent
     if (game.world.children.query<Brick>().length == 1) {
       game.playState = PlayState.won;
       game.world.removeAll(game.world.children.query<Ball>());
-      game.world.removeAll(game.world.children.query<Bat>());
     }
   }
 }
