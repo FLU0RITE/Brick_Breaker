@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:break_brick/presentation/page/game/widget/launch_guide.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../config.dart';
-import '../components/components.dart';
-import '../components/launch_guide.dart';
+import 'config.dart';
+import 'components.dart';
+
 
 enum PlayState { welcome, playing, gameOver, won }
 
@@ -25,9 +26,9 @@ class BrickBreaker extends FlameGame
 
   final ValueNotifier<int> score = ValueNotifier(0);
   final rand = math.Random();
+  final double ballSpawnDelay = 0.1; // 공이 순차적으로 발사되는 시간 간격 (초)
 
   double get width => size.x;
-
   double get height => size.y;
 
   late PlayState _playState;
@@ -39,17 +40,27 @@ class BrickBreaker extends FlameGame
   int _currentBallCount = 1; // 스와이프 벽돌깨기에서는 이 값이 증가합니다.
   int _turnNumber = 0;
 
-  // 1. 공 회수 시 BallComponent에서 호출할 메서드 (수정됨)
+  // 첫 공이 돌아올 위치 (기준 위치) - 게임 시작 시 초기화
+  Vector2 _returnPosition = Vector2(gameWidth / 2, gameHeight - ballRadius);
+
+
+// 1. 공 회수 시 BallComponent에서 호출할 메서드 (수정됨)
   void onBallReturned(Ball ball) {
     _returnedBalls++;
 
-    // 첫 번째 공이 아닌 경우에만 제거합니다.
-    if (!ball.isInitialBall) {
-      ball.removeFromParent();
-    } else {
-      // 첫 번째 공은 위치를 회수 위치로 고정하고 속도를 0으로 설정합니다.
+    // ⭐️ 첫 번째로 돌아온 공의 위치를 다음 턴의 발사 위치로 저장합니다.
+    if (_returnedBalls == 1) {
+      // ball.position을 저장하면 회수 벽(PlayArea)에 닿은 Y 좌표로 저장되므로,
+      // 발사할 공의 위치를 맞추기 위해 Y 좌표는 화면 하단으로 고정하고 X 좌표만 사용합니다.
+      _returnPosition.x = ball.position.x;
+      _returnPosition.y = height - ballRadius;
+
+      // ⭐️ 첫 공만 위치를 회수 위치로 고정하고 속도를 0으로 설정합니다.
       ball.velocity.setFrom(Vector2.zero());
       ball.position.setFrom(_returnPosition);
+    } else {
+      // 첫 공이 아닌 나머지 공들은 제거합니다.
+      ball.removeFromParent();
     }
 
     // 현재 턴의 모든 공이 회수되었는지 확인
@@ -57,18 +68,16 @@ class BrickBreaker extends FlameGame
       endTurn();
     }
   }
-// 2. 턴 종료 및 벽돌 이동/생성 로직
+
+  // 2. 턴 종료 및 벽돌 이동/생성 로직 (수정됨)
   void endTurn() {
     // 1. 벽돌 내리기 및 게임 오버 체크
     final existingBricks = world.children.query<Brick>();
     bool gameOver = false;
 
     for (var brick in existingBricks) {
-      // 벽돌을 한 칸 내립니다. (Config.dart의 brickHeight 및 brickGutter 사용)
       brick.position.y += brickHeight + brickGutter;
-      // TODO: brick.increaseDurability(); (Brick 클래스에 로직 추가 필요)
 
-      // 벽돌이 발사선(화면 하단)에 도달했는지 확인
       if (brick.position.y >= height - (brickHeight * 1.5)) {
         gameOver = true;
         break;
@@ -80,15 +89,14 @@ class BrickBreaker extends FlameGame
       return;
     }
 
-    // 2. 새 벽돌 생성 (턴 번호 증가)
+    // 2. 새 벽돌 생성 및 턴 상태 업데이트
     _turnNumber++;
-    // TODO: 파괴된 벽돌 수에 따라 _currentBallCount 업데이트 로직 추가
+    // ⭐️ 턴이 끝날 때마다 발사할 공 개수를 1 증가시킵니다.
+    _currentBallCount++;
 
-    // 새 벽돌 추가 (기존 startGame의 벽돌 생성 로직을 재활용/수정)
-    // 화면 최상단에 새로운 줄의 벽돌을 추가합니다.
+    // 새 벽돌 추가 (화면 최상단에 새로운 줄의 벽돌을 추가합니다.)
     world.addAll([
       for (var i = 0; i < brickColors.length; i++)
-      // 새 벽돌은 Y 좌표를 초기 벽돌보다 위에 배치합니다. (예: 1.0 * brickHeight)
         Brick(
           position: Vector2(
             (i + 0.5) * brickWidth + (i + 1) * brickGutter,
@@ -102,8 +110,15 @@ class BrickBreaker extends FlameGame
     _returnedBalls = 0; // 카운터 초기화
     _canLaunch = true; // 다음 발사 허용
 
+    // 첫 공의 위치를 확정된 _returnPosition으로 이동시킵니다.
+    final initialBall = world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
+    if (initialBall != null) {
+      initialBall.position.setFrom(_returnPosition);
+    }
+
     // TODO: (멀티 플레이) 이 시점에 Firestore에 파괴된 벽돌 목록을 기록합니다.
   }
+
 
   set playState(PlayState playState) {
     _playState = playState;
@@ -181,10 +196,6 @@ class BrickBreaker extends FlameGame
 
   LaunchGuide? _guide; // 발사 가이드 라인 컴포넌트
 
-  // 첫 공이 돌아올 위치 (기준 위치)
-  Vector2 _returnPosition = Vector2(gameWidth / 2, gameHeight - ballRadius);
-
-
   @override
   void onDragStart(DragStartEvent event) {
     event.handled = true;
@@ -210,7 +221,7 @@ class BrickBreaker extends FlameGame
     }
 
     // 드래그 방향 벡터 계산 (시작점 - 끝점)
-    final dragVector = _dragStartPosition! - _dragLastPosition!;
+    final dragVector = _dragLastPosition! - _dragStartPosition! ;
 
     const double minDragLength = 20.0; // 최소 드래그 길이 (추측한 내용입니다)
 
@@ -244,18 +255,41 @@ class BrickBreaker extends FlameGame
     // 가이드라인 업데이트 (최대 길이 제한 적용)
     _guide?.updateDirection(dragVector);
   }
-
-  // 7. _launchBalls 수정 (공 발사 시점)
+  // 7. _launchBalls 수정 (공 발사 시점 - 멀티볼 발사 로직 추가)
   void _launchBalls(Vector2 direction) {
-    // 1. 첫 공 (isInitialBall=true)의 속도만 변경하여 발사합니다.
+    // 1. 발사 속도 벡터 계산
+    // ⭐️ 최소 발사 속도를 보장하기 위해 direction 벡터를 정규화하여 사용합니다.
+    final normalizedDirection = direction.normalized();
+
+    // final launchVelocity = direction * ballSpeed; // 이 대신 정규화된 벡터 사용
+    final launchVelocity = normalizedDirection * ballSpeed;
+
+    // 참고: normalizedDirection는 이미 길이가 1이므로, ballSpeed는 공이 가질 최대 속도가 됩니다.
+
+    // 2. 첫 공 (isInitialBall=true)을 찾아 속도를 변경하여 발사합니다.
     final initialBall = world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
 
     if (initialBall != null) {
-      final launchVelocity = direction * ballSpeed; // ballSpeed는 config.dart에 정의되었다고 가정
+      // ⭐️ 첫 공 발사
       initialBall.velocity.setFrom(launchVelocity);
+    }
 
-      // TODO: 멀티볼 로직 (for문으로 _currentBallCount만큼 공 추가 생성 및 발사) 추가 필요
-      // ...
+    // 3. 나머지 공들은 순차적으로 생성 및 발사합니다. (Async 지연 로직)
+    if (_currentBallCount > 1) {
+      for (int i = 1; i < _currentBallCount; i++) {
+        // 공 발사 간격만큼 지연
+        Future.delayed(Duration(milliseconds: (ballSpawnDelay * 1000 * i).toInt()), () {
+          // ⭐️ 다음 공 생성 (isInitialBall=false)
+          final newBall = Ball(
+            isInitialBall: false,
+            difficultyModifier: difficultyModifier,
+            radius: ballRadius,
+            position: _returnPosition.clone(), // _returnPosition에서 생성
+            velocity: launchVelocity.clone(), // 동일한 속도로 발사
+          );
+          world.add(newBall);
+        });
+      }
     }
   }
 

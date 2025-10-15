@@ -1,11 +1,12 @@
 
-import 'package:break_brick/presentation/brick_breaker.dart';
+import 'package:break_brick/presentation/page/game/brick_breaker.dart';
 import 'package:break_brick/presentation/page/custom_router.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 }
 

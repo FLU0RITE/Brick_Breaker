@@ -1,10 +1,11 @@
-import 'package:break_brick/components/play_area.dart';
+
+import 'package:break_brick/presentation/page/game/widget/play_area.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/effects.dart';
 
-import '../presentation/brick_breaker.dart';
+import '../brick_breaker.dart';
 
 import 'brick.dart';
 

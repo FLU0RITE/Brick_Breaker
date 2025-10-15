@@ -1,11 +1,11 @@
-import 'package:break_brick/presentation/brick_breaker.dart';
+import 'package:break_brick/presentation/page/game/brick_breaker.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 
-import '../../../../../config.dart';
-import '../../../../components/overlay_screen.dart';
-import '../../../../components/score_card.dart';
+import '../config.dart';
+import '../widget/overlay_screen.dart';
+import '../widget/score_card.dart';
 
 class SoloGamePage extends StatefulWidget {
   const SoloGamePage({super.key});
