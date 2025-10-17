@@ -22,7 +22,7 @@ class Ball extends CircleComponent
          anchor: Anchor.center,
          paint:
              Paint()
-               ..color = const Color(0xff1e6091)
+               ..color = const Color(0xfffbfbfb)
                ..style = PaintingStyle.fill,
          children: [CircleHitbox()],
        );

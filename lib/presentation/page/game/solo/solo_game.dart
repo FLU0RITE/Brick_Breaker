@@ -39,7 +39,7 @@ class _SoloGamePageState extends State<SoloGamePage> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xffa9d6e5), Color(0xfff2e8cf)],
+              colors: [Color(0xff500000), Color(0xff000000)],
             ),
           ),
           child: SafeArea(
@@ -48,7 +48,7 @@ class _SoloGamePageState extends State<SoloGamePage> {
               child: Center(
                 child: Column(
                   children: [
-                    ScoreCard(score: game.score),
+                    ScoreCard(score: game.score, turnNumber: game.turnNumber),
                     Expanded(
                       child: FittedBox(
                         child: SizedBox(
@@ -59,17 +59,17 @@ class _SoloGamePageState extends State<SoloGamePage> {
                             overlayBuilderMap: {
                               PlayState.welcome.name: (context, game) =>
                               const OverlayScreen(
-                                title: 'TAP TO PLAY',
+                                title: '탭하여 시작',
                                 subtitle: 'Use arrow keys or swipe',
                               ),
                               PlayState.gameOver.name: (context, game) =>
                               const OverlayScreen(
-                                title: 'G A M E   O V E R',
+                                title: '게임 종료',
                                 subtitle: 'Tap to Play Again',
                               ),
                               PlayState.won.name: (context, game) =>
                               const OverlayScreen(
-                                title: 'Y O U   W O N ! ! !',
+                                title: '스테이지 클리어',
                                 subtitle: 'Tap to Play Again',
                               ),
                             },

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:break_brick/presentation/page/game/widget/launch_guide.dart';
 import 'package:flame/components.dart';
+import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'package:flutter/services.dart';
 
 import 'config.dart';
 import 'components.dart';
-
 
 enum PlayState { welcome, playing, gameOver, won }
 
@@ -25,26 +25,26 @@ class BrickBreaker extends FlameGame
       );
 
   final ValueNotifier<int> score = ValueNotifier(0);
-  final rand = math.Random();
+
   final double ballSpawnDelay = 0.1; // 공이 순차적으로 발사되는 시간 간격 (초)
 
   double get width => size.x;
   double get height => size.y;
 
   late PlayState _playState;
-
   PlayState get playState => _playState;
 
   // 턴 상태 관리 변수 (Riverpod 사용 시 대체 가능)
   int _returnedBalls = 0;
   int _currentBallCount = 1; // 스와이프 벽돌깨기에서는 이 값이 증가합니다.
-  int _turnNumber = 0;
+  final ValueNotifier<int> turnNumber = ValueNotifier(1);
+
+  late List<int> randomNums = generateUniqueRandomNumbers();
 
   // 첫 공이 돌아올 위치 (기준 위치) - 게임 시작 시 초기화
   Vector2 _returnPosition = Vector2(gameWidth / 2, gameHeight - ballRadius);
 
-
-// 1. 공 회수 시 BallComponent에서 호출할 메서드 (수정됨)
+  // 1. 공 회수 시 BallComponent에서 호출할 메서드 (수정됨)
   void onBallReturned(Ball ball) {
     _returnedBalls++;
 
@@ -90,19 +90,23 @@ class BrickBreaker extends FlameGame
     }
 
     // 2. 새 벽돌 생성 및 턴 상태 업데이트
-    _turnNumber++;
+    turnNumber.value++;
     // ⭐️ 턴이 끝날 때마다 발사할 공 개수를 1 증가시킵니다.
     _currentBallCount++;
 
     // 새 벽돌 추가 (화면 최상단에 새로운 줄의 벽돌을 추가합니다.)
+
+    randomNums = generateUniqueRandomNumbers();
     world.addAll([
-      for (var i = 0; i < brickColors.length; i++)
+      for (var i = 0; i < randomNums.length; i++)
         Brick(
           position: Vector2(
-            (i + 0.5) * brickWidth + (i + 1) * brickGutter,
+            (randomNums[i] + 0.5) * brickWidth + (randomNums[i] + 1) * brickGutter,
             (1.0) * brickHeight + 1 * brickGutter,
           ),
-          color: brickColors[rand.nextInt(brickColors.length)],
+          neonColor1: Colors.white,
+          neonColor2: Colors.black,
+          durability: ValueNotifier(_currentBallCount),
         ),
     ]);
 
@@ -111,14 +115,14 @@ class BrickBreaker extends FlameGame
     _canLaunch = true; // 다음 발사 허용
 
     // 첫 공의 위치를 확정된 _returnPosition으로 이동시킵니다.
-    final initialBall = world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
+    final initialBall =
+        world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
     if (initialBall != null) {
       initialBall.position.setFrom(_returnPosition);
     }
 
     // TODO: (멀티 플레이) 이 시점에 Firestore에 파괴된 벽돌 목록을 기록합니다.
   }
-
 
   set playState(PlayState playState) {
     _playState = playState;
@@ -151,37 +155,41 @@ class BrickBreaker extends FlameGame
     world.removeAll(world.children.query<Ball>());
     world.removeAll(world.children.query<Brick>());
     _returnedBalls = 0;
-    _turnNumber = 0;
+    turnNumber.value = 1;
     _canLaunch = true;
+    _currentBallCount = 1;
 
     playState = PlayState.playing;
     score.value = 0;
 
     // 1. 첫 공 생성 및 _returnPosition 설정
     final initialBall = Ball(
-      isInitialBall: true, // 첫 공으로 표
+      isInitialBall: true,
+      // 첫 공으로 표
       difficultyModifier: difficultyModifier,
       radius: ballRadius,
-      position: Vector2(width/2, height - ballRadius), // 화면 바닥 근처
-      velocity: Vector2(0,0),
-
+      position: Vector2(width / 2, height - ballRadius),
+      // 화면 바닥 근처
+      velocity: Vector2(0, 0),
     );
     world.add(initialBall);
     _returnPosition = initialBall.position.clone(); // 첫 공의 위치를 회수 기준으로 설정
 
     // 2. 초기 벽돌 배치 (요청에 따라 1줄만 배치하도록 간소화)
+    randomNums = generateUniqueRandomNumbers();
     world.addAll([
-      for (var i = 0; i < brickColors.length; i++)
+      for (var i = 0; i < randomNums.length; i++)
         Brick(
           position: Vector2(
-            (i + 0.5) * brickWidth + (i + 1) * brickGutter,
+            (randomNums[i] + 0.5) * brickWidth + (randomNums[i] + 1) * brickGutter,
             (1.0) * brickHeight + 1 * brickGutter,
           ),
-          color: brickColors[rand.nextInt(brickColors.length)], // 랜덤 색상
+          neonColor1: Colors.white,
+          neonColor2: Colors.black,
+          durability: ValueNotifier(_currentBallCount),
         ),
     ]);
   }
-
 
   @override
   void onTap() {
@@ -208,12 +216,34 @@ class BrickBreaker extends FlameGame
     _guide = LaunchGuide(position: _returnPosition);
     world.add(_guide!);
   }
+
+  List<int> generateUniqueRandomNumbers() {
+    final random = math.Random();
+
+    // 1. 리스트의 개수(N)를 랜덤으로 결정 (1부터 6까지)
+    // nextInt(6)은 0~5를 반환하므로, +1을 더해 1~6 범위를 만듭니다.
+    final int count = random.nextInt(6) + 1;
+
+    // 2. 가능한 전체 숫자 범위 (1, 2, 3, 4, 5, 6)를 가진 리스트를 생성합니다.
+    List<int> availableNumbers = List.generate(6, (index) => index);
+
+    // 3. 리스트를 무작위로 섞습니다. (중복 없이 뽑는 핵심 로직)
+    availableNumbers.shuffle(random);
+
+    // 4. 결정된 개수(count)만큼 리스트의 앞에서부터 잘라내어 반환합니다.
+    // sublist(0, count)는 인덱스 0부터 count-1까지의 요소를 추출합니다.
+    return availableNumbers.sublist(0, count);
+  }
+
   // 6. onDragEnd 수정 (위치 차이를 이용한 발사 방향 결정, 속도 무시)
   @override
   void onDragEnd(DragEndEvent event) {
     event.handled = true;
 
-    if (_dragStartPosition == null || _dragLastPosition == null || playState != PlayState.playing || !_canLaunch) {
+    if (_dragStartPosition == null ||
+        _dragLastPosition == null ||
+        playState != PlayState.playing ||
+        !_canLaunch) {
       _dragStartPosition = null;
       _dragLastPosition = null;
       _guide?.removeFromParent(); // 가이드 제거
@@ -221,7 +251,7 @@ class BrickBreaker extends FlameGame
     }
 
     // 드래그 방향 벡터 계산 (시작점 - 끝점)
-    final dragVector = _dragLastPosition! - _dragStartPosition! ;
+    final dragVector = _dragLastPosition! - _dragStartPosition!;
 
     const double minDragLength = 20.0; // 최소 드래그 길이 (추측한 내용입니다)
 
@@ -230,7 +260,7 @@ class BrickBreaker extends FlameGame
       // 발사: 정규화된 방향 벡터만 전달 (스와이프 속도 무시)
       _launchBalls(dragVector.normalized());
 
-      _canLaunch = false;
+      _canLaunch = true;
     }
 
     // 가이드라인 제거
@@ -255,6 +285,7 @@ class BrickBreaker extends FlameGame
     // 가이드라인 업데이트 (최대 길이 제한 적용)
     _guide?.updateDirection(dragVector);
   }
+
   // 7. _launchBalls 수정 (공 발사 시점 - 멀티볼 발사 로직 추가)
   void _launchBalls(Vector2 direction) {
     // 1. 발사 속도 벡터 계산
@@ -267,7 +298,8 @@ class BrickBreaker extends FlameGame
     // 참고: normalizedDirection는 이미 길이가 1이므로, ballSpeed는 공이 가질 최대 속도가 됩니다.
 
     // 2. 첫 공 (isInitialBall=true)을 찾아 속도를 변경하여 발사합니다.
-    final initialBall = world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
+    final initialBall =
+        world.children.query<Ball>().where((b) => b.isInitialBall).firstOrNull;
 
     if (initialBall != null) {
       // ⭐️ 첫 공 발사
@@ -278,21 +310,24 @@ class BrickBreaker extends FlameGame
     if (_currentBallCount > 1) {
       for (int i = 1; i < _currentBallCount; i++) {
         // 공 발사 간격만큼 지연
-        Future.delayed(Duration(milliseconds: (ballSpawnDelay * 1000 * i).toInt()), () {
-          // ⭐️ 다음 공 생성 (isInitialBall=false)
-          final newBall = Ball(
-            isInitialBall: false,
-            difficultyModifier: difficultyModifier,
-            radius: ballRadius,
-            position: _returnPosition.clone(), // _returnPosition에서 생성
-            velocity: launchVelocity.clone(), // 동일한 속도로 발사
-          );
-          world.add(newBall);
-        });
+        Future.delayed(
+          Duration(milliseconds: (ballSpawnDelay * 300 * i).toInt()),
+          () {
+            // ⭐️ 다음 공 생성 (isInitialBall=false)
+            final newBall = Ball(
+              isInitialBall: false,
+              difficultyModifier: difficultyModifier,
+              radius: ballRadius,
+              position: _returnPosition.clone(),
+              // _returnPosition에서 생성
+              velocity: launchVelocity.clone(), // 동일한 속도로 발사
+            );
+            world.add(newBall);
+          },
+        );
       }
     }
   }
-
 
   @override
   KeyEventResult onKeyEvent(

@@ -3,16 +3,16 @@
 import 'dart:ui';
 
 const brickColors = [
-  Color(0xfff94144),
-  Color(0xfff3722c),
-  Color(0xfff8961e),
-  Color(0xfff9844a),
-  Color(0xfff9c74f),
-  Color(0xff90be6d),
-  Color(0xff43aa8b),
-  Color(0xff4d908e),
-  Color(0xff277da1),
-  Color(0xff577590),
+  Color(0xffffffff),
+  Color(0xffececeb),
+  Color(0xffe0dddd),
+  Color(0xffd0cecd),
+  Color(0xffb8b6b5),
+  Color(0xff979797),
+  Color(0xff7c7c7c),
+  Color(0xff505050),
+  Color(0xff242424),
+  Color(0xff0a0a0a),
 ];
 
 const gameWidth = 820.0;
@@ -23,6 +23,6 @@ const ballSpeed = 1500.0;
 
 const brickGutter = gameWidth * 0.015;
 final brickWidth =
-    (gameWidth - (brickGutter * (brickColors.length + 1))) / brickColors.length;
-const brickHeight = gameHeight * 0.03;
+    (gameWidth - (brickGutter * (6 + 1))) / 6;
+const brickHeight = gameHeight * 0.06;
 const difficultyModifier = 1.03;
