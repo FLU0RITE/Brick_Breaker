@@ -7,6 +7,7 @@ import 'package:flame/effects.dart';
 
 import '../brick_breaker.dart';
 
+import '../config.dart';
 import 'brick.dart';
 
 class Ball extends CircleComponent
@@ -50,7 +51,7 @@ class Ball extends CircleComponent
         velocity.x = -velocity.x;
       } else if (intersectionPoints.first.x >= game.width) {
         velocity.x = -velocity.x;
-      } else if (intersectionPoints.first.y >= game.height) {
+      } else if (intersectionPoints.first.y >= game.height - ballRadius) {
         // 공의 속도를 0으로 설정하여 멈춥니다.
         velocity.setFrom(Vector2.zero());
 

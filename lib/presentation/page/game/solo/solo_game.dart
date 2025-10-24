@@ -1,6 +1,7 @@
 import 'package:break_brick/presentation/page/game/brick_breaker.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 import '../config.dart';
@@ -10,7 +11,7 @@ import '../widget/score_card.dart';
 class SoloGamePage extends StatefulWidget {
   const SoloGamePage({super.key});
 
-  @override                                                     // Add from here...
+  @override
   State<SoloGamePage> createState() => _SoloGamePageState();
 }
 
@@ -28,10 +29,10 @@ class _SoloGamePageState extends State<SoloGamePage> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // textTheme: GoogleFonts.pressStart2pTextTheme().apply(
-        //   bodyColor: const Color(0xff184e77),
-        //   displayColor: const Color(0xff184e77),
-        // ),
+        textTheme: GoogleFonts.pressStart2pTextTheme().apply(
+          bodyColor: const Color(0xff184e77),
+          displayColor: const Color(0xff184e77),
+        ),
       ),
       home: Scaffold(
         body: Container(

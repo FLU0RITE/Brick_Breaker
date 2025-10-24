@@ -47,11 +47,7 @@ class BrickBreaker extends FlameGame
   // 1. 공 회수 시 BallComponent에서 호출할 메서드 (수정됨)
   void onBallReturned(Ball ball) {
     _returnedBalls++;
-
-    // ⭐️ 첫 번째로 돌아온 공의 위치를 다음 턴의 발사 위치로 저장합니다.
     if (_returnedBalls == 1) {
-      // ball.position을 저장하면 회수 벽(PlayArea)에 닿은 Y 좌표로 저장되므로,
-      // 발사할 공의 위치를 맞추기 위해 Y 좌표는 화면 하단으로 고정하고 X 좌표만 사용합니다.
       _returnPosition.x = ball.position.x;
       _returnPosition.y = height - ballRadius;
 
@@ -60,9 +56,20 @@ class BrickBreaker extends FlameGame
       ball.position.setFrom(_returnPosition);
     } else {
       // 첫 공이 아닌 나머지 공들은 제거합니다.
-      ball.removeFromParent();
-    }
+      // 첫 공의 포지션으로 이동하는 것 처럼 보이게 만듭니다.
+      if (ball.position.x > _returnPosition.x) {
+        ball.velocity.setFrom(Vector2(-100 , _returnPosition.y));
+        if (ball.position.x == _returnPosition.x ) {
+          ball.removeFromParent();
+        }
+      } else if (ball.position.x < _returnPosition.x) {
+        ball.velocity.setFrom(Vector2(100 , _returnPosition.y));
+        if (ball.position.x == _returnPosition.x ) {
+          ball.removeFromParent();
+        }
+      }
 
+    }
     // 현재 턴의 모든 공이 회수되었는지 확인
     if (_returnedBalls >= _currentBallCount) {
       endTurn();
