@@ -1,4 +1,3 @@
-
 import 'package:break_brick/presentation/page/game/widget/wall.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -52,8 +51,7 @@ class Ball extends CircleComponent
           velocity.x = -velocity.x;
         }
       }
-    }
-    else if (other is Brick) {
+    } else if (other is Brick) {
       debugPrint("충돌");
       if (position.y < other.position.y - other.size.y / 2) {
         velocity.y = -velocity.y;

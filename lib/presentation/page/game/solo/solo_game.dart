@@ -14,6 +14,7 @@ class SoloGamePage extends ConsumerStatefulWidget {
   @override
   ConsumerState<SoloGamePage> createState() => _SoloGamePageState();
 }
+
 class _SoloGamePageState extends ConsumerState<SoloGamePage> {
   // ⭐️ 1. BrickBreaker 인스턴스를 State에 저장하여 고정합니다.
   late final BrickBreaker _game;
@@ -73,21 +74,21 @@ class _SoloGamePageState extends ConsumerState<SoloGamePage> {
                         child: GameWidget(
                           game: _game,
                           overlayBuilderMap: {
-                            PlayState.welcome.name: (context, game) =>
-                            const OverlayScreen(
-                              title: '탭하여 시작',
-                              subtitle: 'Use arrow keys or swipe',
-                            ),
-                            PlayState.gameOver.name: (context, game) =>
-                            const OverlayScreen(
-                              title: '게임 종료',
-                              subtitle: 'Tap to Play Again',
-                            ),
-                            PlayState.won.name: (context, game) =>
-                            const OverlayScreen(
-                              title: '스테이지 클리어',
-                              subtitle: 'Tap to Play Again',
-                            ),
+                            PlayState.welcome.name:
+                                (context, game) => const OverlayScreen(
+                                  title: '탭하여 시작',
+                                  subtitle: 'Use arrow keys or swipe',
+                                ),
+                            PlayState.gameOver.name:
+                                (context, game) => const OverlayScreen(
+                                  title: '게임 종료',
+                                  subtitle: 'Tap to Play Again',
+                                ),
+                            PlayState.won.name:
+                                (context, game) => const OverlayScreen(
+                                  title: '스테이지 클리어',
+                                  subtitle: 'Tap to Play Again',
+                                ),
                           },
                         ),
                       ),

@@ -8,10 +8,10 @@ import '../brick_breaker.dart';
 
 class Wall extends RectangleComponent with CollisionCallbacks {
   Wall({required Vector2 position, required Vector2 size})
-      : super(
-    position: position,
-    size: size,
-    paint: Paint()..color = Colors.transparent,
-    children: [RectangleHitbox()],
-  );
+    : super(
+        position: position,
+        size: size,
+        paint: Paint()..color = Colors.transparent,
+        children: [RectangleHitbox()],
+      );
 }

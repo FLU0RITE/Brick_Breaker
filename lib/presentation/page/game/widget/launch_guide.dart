@@ -26,10 +26,11 @@ class LaunchGuide extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    final paint = Paint()
-      ..color = Colors.red.withAlpha(200)
-      ..strokeWidth = 30.0
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = Colors.red.withAlpha(200)
+          ..strokeWidth = 30.0
+          ..strokeCap = StrokeCap.round;
 
     final Vector2 launchDirection = -_drawVector.normalized();
 

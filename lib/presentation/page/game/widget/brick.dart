@@ -32,12 +32,12 @@ class Brick extends RectangleComponent
     required this.neonColor2,
     required this.durability,
   }) : _maxDurability = durability.value, // 현재 내구도 값을 최대 내구도로 설정
-        super(
-        size: Vector2(brickWidth, brickHeight),
-        anchor: Anchor.center,
-        children: [RectangleHitbox()],
-      ) {
-// 3. 내구도 숫자 TextComponent 설정 및 초기화
+       super(
+         size: Vector2(brickWidth, brickHeight),
+         anchor: Anchor.center,
+         children: [RectangleHitbox()],
+       ) {
+    // 3. 내구도 숫자 TextComponent 설정 및 초기화
     final textStyle = TextStyle(
       fontSize: size.y * 0.5, // 벽돌 높이의 약 50% 크기
       color: Colors.white,
@@ -66,33 +66,35 @@ class Brick extends RectangleComponent
     // 내구도 값이 변경될 때마다 텍스트를 업데이트하는 리스너를 등록합니다.
     durability.addListener(_updateDurabilityText);
 
-
-
-
     // 1. 외부 네온 효과 Paint 설정 (가장 넓게 퍼지는 광채)
-    outerGlowPaint = Paint()
-      ..color = neonColor1.withAlpha(200)
-      ..style = PaintingStyle.stroke // 윤곽선 스타일
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.outer, glowSigmaOuter);
+    outerGlowPaint =
+        Paint()
+          ..color = neonColor1.withAlpha(200)
+          ..style =
+              PaintingStyle
+                  .stroke // 윤곽선 스타일
+          ..strokeWidth = 4.0
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.outer, glowSigmaOuter);
 
     // 2. 내부 네온/충전재 Paint 설정 (더 선명한 색상)
-    innerGlowPaint = Paint()
-      ..color = neonColor2.withAlpha(230)
-      ..style = PaintingStyle.fill // 채우기 스타일
-      ..maskFilter = const MaskFilter.blur(
-        BlurStyle.normal,
-        glowSigmaInner,
-      );
-
+    innerGlowPaint =
+        Paint()
+          ..color = neonColor2.withAlpha(230)
+          ..style =
+              PaintingStyle
+                  .fill // 채우기 스타일
+          ..maskFilter = const MaskFilter.blur(
+            BlurStyle.normal,
+            glowSigmaInner,
+          );
   }
-
 
   // 내구도 텍스트를 업데이트하는 메서드
   void _updateDurabilityText() {
     durabilityText.text = durability.value.toString();
   }
+
   // 이 메서드를 오버라이드해야 네온 페인트가 그려집니다.
   @override
   void render(Canvas canvas) {
@@ -103,7 +105,6 @@ class Brick extends RectangleComponent
 
     // 2. 내부 네온 충전재 그리기
     canvas.drawRect(rect, innerGlowPaint);
-
   }
 
   @override
@@ -115,9 +116,9 @@ class Brick extends RectangleComponent
 
   @override
   void onCollisionStart(
-      Set<Vector2> intersectionPoints,
-      PositionComponent other,
-      ) {
+    Set<Vector2> intersectionPoints,
+    PositionComponent other,
+  ) {
     super.onCollisionStart(intersectionPoints, other);
 
     // 내구도 감소는 충돌 시작 시 즉시 처리
@@ -128,7 +129,6 @@ class Brick extends RectangleComponent
     outerGlowPaint.color = neonColor1;
     innerGlowPaint.color = neonColor2;
 
-
     // 제거 로직
     if (durability.value == 0) {
       removeFromParent();
@@ -138,8 +138,14 @@ class Brick extends RectangleComponent
     // ✨ 핵심 수정: 일정 시간 후 네온 설정을 원래대로 되돌리는 Future.delayed 추가
     Future.delayed(const Duration(milliseconds: 100), () {
       // 네온 광채 강도를 원래 값으로 복원
-      outerGlowPaint.maskFilter = const MaskFilter.blur(BlurStyle.outer, glowSigmaOuter);
-      innerGlowPaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, glowSigmaInner);
+      outerGlowPaint.maskFilter = const MaskFilter.blur(
+        BlurStyle.outer,
+        glowSigmaOuter,
+      );
+      innerGlowPaint.maskFilter = const MaskFilter.blur(
+        BlurStyle.normal,
+        glowSigmaInner,
+      );
 
       // 색상도 원래의 은은한 광채 투명도로 복원 (2번에서 수정한 opacity 값 사용)
       outerGlowPaint.color = neonColor1.withAlpha(200);
