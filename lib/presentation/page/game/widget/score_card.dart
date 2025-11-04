@@ -1,39 +1,24 @@
 import 'package:flutter/material.dart';
 
-class ScoreCard extends StatelessWidget {
-  const ScoreCard({super.key, required this.score, required this.turnNumber});
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-  final ValueNotifier<int> score;
-
-  final ValueNotifier<int> turnNumber;
+import '../../../controller/game/game_view_model.dart';
+class ScoreCard extends ConsumerWidget {
+  const ScoreCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final turnNumber = ref.watch(gameViewModelProvider.select((value) => value.turnNumber));
+    final score = ref.watch(gameViewModelProvider.select((value) => value.score));
     return Row(
       children: [
-        ValueListenableBuilder<int>(
-          valueListenable: score,
-          builder: (context, score, child) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 18),
-              child: Text(
-                '점수: $score'.toUpperCase(),
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
-              ),
-            );
-          },
+        Text(
+          '점수: $score'.toUpperCase(),
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
         ),
-        ValueListenableBuilder<int>(
-          valueListenable: turnNumber,
-          builder: (context, turnNumber, child) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 18),
-              child: Text(
-                '단계: $turnNumber'.toUpperCase(),
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
-              ),
-            );
-          },
+        Text(
+          '단계: $turnNumber'.toUpperCase(),
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white),
         ),
       ],
     );

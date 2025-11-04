@@ -3,6 +3,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui'; // MaskFilter를 위해 필요합니다.
 
+import '../../../controller/game/game_view_model.dart';
 import '../config.dart';
 import '../brick_breaker.dart';
 import 'ball.dart';
@@ -13,9 +14,8 @@ class Brick extends RectangleComponent
   static const double glowSigmaInner = 3.0;
   static const double glowSigmaOuter = 8.0;
 
-  // 벽돌의 네온 색상 1과 2를 저장할 변수
-  Color neonColor1; // 외부 네온 색상 (예: 파란색)
-  Color neonColor2; // 내부 윤곽선/충전재 색상 (예: 분홍색)
+  Color neonColor1;
+  Color neonColor2;
 
   // 두 가지 네온 페인트 객체
   late Paint outerGlowPaint;
@@ -130,11 +130,9 @@ class Brick extends RectangleComponent
 
 
     // 제거 로직
-    if (durability.value <= 0) {
-      // 벽돌을 즉시 제거하면 반짝임을 볼 시간이 없으므로, 잠시 지연 후 제거를 고려할 수 있습니다.
-      // Future.delayed(const Duration(milliseconds: 100), () => removeFromParent());
+    if (durability.value == 0) {
       removeFromParent();
-      game.score.value++;
+      game.viewModel.increaseScore(1);
     }
 
     // ✨ 핵심 수정: 일정 시간 후 네온 설정을 원래대로 되돌리는 Future.delayed 추가
@@ -149,7 +147,7 @@ class Brick extends RectangleComponent
     });
 
     if (game.world.children.query<Brick>().length == 1) {
-      game.playState = PlayState.won;
+      game.viewModel.setPlayState(PlayState.won);
       game.world.removeAll(game.world.children.query<Ball>());
     }
   }
